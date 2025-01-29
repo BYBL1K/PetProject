@@ -1,19 +1,41 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello, World!!!!")
+var task string
+
+type requestBody struct {
+	Task string `json:"task"`
+}
+
+func PostHandler(w http.ResponseWriter, r *http.Request) {
+	var req requestBody
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Inalid Request", http.StatusBadRequest)
+		return
+	}
+
+	task = req.Task
+
+	fmt.Fprintln(w, "Task update")
+}
+
+func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, %s", task)
 }
 
 func main() {
 	router := mux.NewRouter()
-	// наше приложение будет слушать запросы на localhost:8080/api/hello
-	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
+
+	router.HandleFunc("/task", PostHandler).Methods("POST")
+	router.HandleFunc("/", GetTaskHandler).Methods("GET")
 	http.ListenAndServe("localhost:8080", router)
+
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -20,8 +19,11 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create message", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 
-	fmt.Fprintln(w, "Task added to database")
+	w.WriteHeader(http.StatusCreated)
+
+	json.NewEncoder(w).Encode(message)
 }
 
 func GetHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +33,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch tasks", http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(task)
 }
 

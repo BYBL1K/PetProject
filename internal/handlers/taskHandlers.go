@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"PetProject/PetProject/internal/taskService"
+	"PetProject/internal/taskService"
 	"encoding/json"
 	"net/http"
 	"strconv"

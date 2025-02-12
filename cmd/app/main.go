@@ -1,9 +1,9 @@
 package main
 
 import (
-	"PetProject/PetProject/internal/database"
-	"PetProject/PetProject/internal/handlers"
-	"PetProject/PetProject/internal/taskService"
+	"PetProject/internal/database"
+	"PetProject/internal/handlers"
+	"PetProject/internal/taskService"
 	"net/http"
 
 	"github.com/gorilla/mux"

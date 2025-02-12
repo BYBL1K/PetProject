@@ -57,8 +57,7 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	DB.Delete(&message, uint(taskID))
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(message)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {

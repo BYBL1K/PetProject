@@ -23,3 +23,7 @@ run:
 # генерация через openapi
 gen:
 	oapi-codegen -config openapi/.openapi -include-tags tasks -package tasks openapi/openapi.yaml > ./internal/web/tasks/api.gen.go	
+
+# проверка кода линтом
+lint:
+	golangci-lint run --out-format=colored-line-number	

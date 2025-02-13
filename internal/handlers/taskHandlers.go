@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"PetProject/internal/taskService"
-	"encoding/json"
+	"PetProject/internal/web/tasks"
+	"context"
 	"net/http"
 	"strconv"
 
@@ -13,39 +14,94 @@ type Handler struct {
 	Service *taskService.TaskService
 }
 
+// DeleteTasksId implements tasks.StrictServerInterface.
+func (h *Handler) DeleteTasksId(ctx context.Context, request tasks.DeleteTasksIdRequestObject) (tasks.DeleteTasksIdResponseObject, error) {
+	taskID := request.Id
+
+	err := h.Service.DeleteTaskByID(taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks.DeleteTasksId204Response{}, nil
+
+}
+
+// GetTasks implements tasks.StrictServerInterface.
+func (h *Handler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
+	allTasks, err := h.Service.GetAllTasks()
+	if err != nil {
+		return nil, err
+	}
+
+	response := tasks.GetTasks200JSONResponse{}
+
+	for _, tsk := range allTasks {
+		task := tasks.Task{
+			Id:     &tsk.ID,
+			Task:   &tsk.Text,
+			IsDone: &tsk.IsDone,
+		}
+		response = append(response, task)
+	}
+
+	return response, nil
+}
+
+// PostTasks implements tasks.StrictServerInterface.
+func (h *Handler) PostTasks(ctx context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
+
+	taskRequest := request.Body
+
+	taskToCreate := taskService.Task{
+		Text:   *taskRequest.Task,
+		IsDone: *taskRequest.IsDone,
+	}
+
+	createdTask, err := h.Service.CreateTask(taskToCreate)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := tasks.PostTasks201JSONResponse{
+		Id:     &createdTask.ID,
+		Task:   &createdTask.Text,
+		IsDone: &createdTask.IsDone,
+	}
+
+	return response, nil
+}
+
+// PutTasksId implements tasks.StrictServerInterface.
+func (h *Handler) PutTasksId(ctx context.Context, request tasks.PutTasksIdRequestObject) (tasks.PutTasksIdResponseObject, error) {
+	taskID := request.Id
+	taskRequest := request.Body
+
+	taskToUpdate := taskService.Task{
+		Text:   *taskRequest.Task,
+		IsDone: *taskRequest.IsDone,
+	}
+
+	updatedTask, err := h.Service.UpdateTaskByID(taskID, taskToUpdate)
+	if err != nil {
+		return nil, err
+	}
+
+	response := tasks.PutTasksId200JSONResponse{
+		Id:     &updatedTask.ID,
+		Task:   &updatedTask.Text,
+		IsDone: &updatedTask.IsDone,
+	}
+
+	return response, nil
+
+}
+
 func NewHandler(service *taskService.TaskService) *Handler {
 	return &Handler{
 		Service: service,
 	}
-}
-
-func (h *Handler) GetTaskHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.Service.GetAllTasks()
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
-}
-
-func (h *Handler) PostTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var task taskService.Task
-	err := json.NewDecoder(r.Body).Decode(&task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	createdTask, err := h.Service.CreateTask(task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(createdTask)
 }
 
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,31 +120,4 @@ func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func (h *Handler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	taskID, err := strconv.ParseUint(vars["id"], 10, 32)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var updatedTask taskService.Task
-
-	err = json.NewDecoder(r.Body).Decode(&updatedTask)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	updatedTask, err = h.Service.UpdateTaskByID(uint(taskID), updatedTask)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedTask)
 }

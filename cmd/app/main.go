@@ -1,12 +1,15 @@
 package main
 
 import (
+	"log"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+
 	"PetProject/internal/database"
 	"PetProject/internal/handlers"
 	"PetProject/internal/taskService"
-	"net/http"
-
-	"github.com/gorilla/mux"
+	"PetProject/internal/web/tasks"
 )
 
 func main() {
@@ -19,13 +22,17 @@ func main() {
 
 	handler := handlers.NewHandler(service)
 
-	router := mux.NewRouter()
+	// Инициализируем Echo
+	e := echo.New()
 
-	router.HandleFunc("/api/messages", handler.PostTaskHandler).Methods("POST")
-	router.HandleFunc("/api/messages", handler.GetTaskHandler).Methods("GET")
-	router.HandleFunc("/api/messages/{id}", handler.DeleteTaskHandler).Methods("DELETE")
-	router.HandleFunc("/api/messages/{id}", handler.UpdateTaskHandler).Methods("PUT")
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	http.ListenAndServe("localhost:8080", router)
+	strictHandler := tasks.NewStrictHandler(handler, nil)
+	tasks.RegisterHandlers(e, strictHandler)
+
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("Failed to start with err: %v", err)
+	}
 
 }

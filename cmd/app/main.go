@@ -9,21 +9,32 @@ import (
 	"PetProject/internal/database"
 	"PetProject/internal/handlers"
 	"PetProject/internal/taskService"
+	"PetProject/internal/userService"
 	"PetProject/internal/web/tasks"
+	"PetProject/internal/web/users"
 )
 
 func main() {
 
 	database.InitDB()
-	err := database.DB.AutoMigrate(&taskService.Task{})
-	if err != nil {
-		log.Fatalf("Failed to AutoMigrate Database with err: %v", err)
+	errTask := database.DB.AutoMigrate(&taskService.Task{})
+	if errTask != nil {
+		log.Fatalf("Failed to AutoMigrate Database with err: %v", errTask)
 	}
 
-	repo := taskService.NewTaskRepository(database.DB)
-	service := taskService.NewService(*repo)
+	errUser := database.DB.AutoMigrate(&userService.User{})
+	if errUser != nil {
+		log.Fatalf("Failed to AutoMigrate Database with err: %v", errUser)
+	}
 
-	handler := handlers.NewHandler(service)
+	tasksRepo := taskService.NewTaskRepository(database.DB)
+	usersRepo := userService.NewUserRepository(database.DB)
+
+	tasksService := taskService.NewService(*tasksRepo)
+	usersService := userService.NewService(*usersRepo)
+
+	tasksHandler := handlers.NewTaskHandler(tasksService)
+	usersHandler := handlers.NewUserHandler(usersService)
 
 	// Инициализируем Echo
 	e := echo.New()
@@ -31,8 +42,11 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	strictHandler := tasks.NewStrictHandler(handler, nil)
-	tasks.RegisterHandlers(e, strictHandler)
+	strictTasksHandler := tasks.NewStrictHandler(tasksHandler, nil)
+	tasks.RegisterHandlers(e, strictTasksHandler)
+
+	strictUsersHandler := users.NewStrictHandler(usersHandler, nil)
+	users.RegisterHandlers(e, strictUsersHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatalf("Failed to start with err: %v", err)

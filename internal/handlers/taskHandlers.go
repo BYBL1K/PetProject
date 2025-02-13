@@ -10,12 +10,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Handler struct {
+type TaskHandler struct {
 	Service *taskService.TaskService
 }
 
 // DeleteTasksId implements tasks.StrictServerInterface.
-func (h *Handler) DeleteTasksId(ctx context.Context, request tasks.DeleteTasksIdRequestObject) (tasks.DeleteTasksIdResponseObject, error) {
+func (h *TaskHandler) DeleteTasksId(ctx context.Context, request tasks.DeleteTasksIdRequestObject) (tasks.DeleteTasksIdResponseObject, error) {
 	taskID := request.Id
 
 	err := h.Service.DeleteTaskByID(taskID)
@@ -28,7 +28,7 @@ func (h *Handler) DeleteTasksId(ctx context.Context, request tasks.DeleteTasksId
 }
 
 // GetTasks implements tasks.StrictServerInterface.
-func (h *Handler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
+func (h *TaskHandler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
 	allTasks, err := h.Service.GetAllTasks()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (h *Handler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObj
 }
 
 // PostTasks implements tasks.StrictServerInterface.
-func (h *Handler) PostTasks(ctx context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
+func (h *TaskHandler) PostTasks(ctx context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
 
 	taskRequest := request.Body
 
@@ -74,7 +74,7 @@ func (h *Handler) PostTasks(ctx context.Context, request tasks.PostTasksRequestO
 }
 
 // PutTasksId implements tasks.StrictServerInterface.
-func (h *Handler) PutTasksId(ctx context.Context, request tasks.PutTasksIdRequestObject) (tasks.PutTasksIdResponseObject, error) {
+func (h *TaskHandler) PutTasksId(ctx context.Context, request tasks.PutTasksIdRequestObject) (tasks.PutTasksIdResponseObject, error) {
 	taskID := request.Id
 	taskRequest := request.Body
 
@@ -98,13 +98,13 @@ func (h *Handler) PutTasksId(ctx context.Context, request tasks.PutTasksIdReques
 
 }
 
-func NewHandler(service *taskService.TaskService) *Handler {
-	return &Handler{
+func NewTaskHandler(service *taskService.TaskService) *TaskHandler {
+	return &TaskHandler{
 		Service: service,
 	}
 }
 
-func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	taskID, err := strconv.ParseUint(vars["id"], 10, 32)

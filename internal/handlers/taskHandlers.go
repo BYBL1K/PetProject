@@ -3,7 +3,9 @@ package handlers
 import (
 	"PetProject/internal/taskService"
 	"PetProject/internal/web/tasks"
+	"PetProject/internal/web/users"
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -41,6 +43,7 @@ func (h *TaskHandler) GetTasks(ctx context.Context, request tasks.GetTasksReques
 			Id:     &tsk.ID,
 			Task:   &tsk.Text,
 			IsDone: &tsk.IsDone,
+			UserID: &tsk.UserID,
 		}
 		response = append(response, task)
 	}
@@ -56,6 +59,7 @@ func (h *TaskHandler) PostTasks(ctx context.Context, request tasks.PostTasksRequ
 	taskToCreate := taskService.Task{
 		Text:   *taskRequest.Task,
 		IsDone: *taskRequest.IsDone,
+		UserID: *taskRequest.UserID,
 	}
 
 	createdTask, err := h.Service.CreateTask(taskToCreate)
@@ -68,6 +72,7 @@ func (h *TaskHandler) PostTasks(ctx context.Context, request tasks.PostTasksRequ
 		Id:     &createdTask.ID,
 		Task:   &createdTask.Text,
 		IsDone: &createdTask.IsDone,
+		UserID: &createdTask.UserID,
 	}
 
 	return response, nil
@@ -92,6 +97,7 @@ func (h *TaskHandler) PutTasksId(ctx context.Context, request tasks.PutTasksIdRe
 		Id:     &updatedTask.ID,
 		Task:   &updatedTask.Text,
 		IsDone: &updatedTask.IsDone,
+		UserID: &updatedTask.UserID,
 	}
 
 	return response, nil
@@ -120,4 +126,28 @@ func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandler) GetUsersIdTasks(ctx context.Context, request users.GetUsersIdTasksRequestObject) (users.GetUsersIdTasksResponseObject, error) {
+	userID := request.Id
+
+	tasksForUser, err := h.Service.GetTasksForUser(userID)
+	log.Printf("User id: %d", userID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := users.GetUsersIdTasks200JSONResponse{}
+
+	for _, tsk := range tasksForUser {
+		task := users.Task{
+			Id:     &tsk.ID,
+			Task:   &tsk.Text,
+			IsDone: &tsk.IsDone,
+			UserId: &tsk.UserID,
+		}
+		response = append(response, task)
+	}
+
+	return response, nil
 }

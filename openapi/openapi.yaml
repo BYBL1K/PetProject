@@ -34,8 +34,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
-  
+                $ref: '#/components/schemas/Task' 
   /tasks/{id}:
     put:
       summary: Update an existing task
@@ -160,6 +159,29 @@ paths:
           description: User deleted successfully
         '404':
           description: User not found
+  /users/{id}/tasks:
+    get:
+      summary: Get Users Tasks
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      responses:
+        '200':
+          description: Array of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: User not found
 components:
   schemas:
     Task:
@@ -172,6 +194,9 @@ components:
           type: string
         is_done:
           type: boolean
+        user_id:
+          type: integer
+          format: uint  
     User:
       type: object
       properties:

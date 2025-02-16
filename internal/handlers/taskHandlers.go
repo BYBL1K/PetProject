@@ -144,7 +144,6 @@ func (h *UserHandler) GetUsersIdTasks(ctx context.Context, request users.GetUser
 			Id:     &tsk.ID,
 			Task:   &tsk.Text,
 			IsDone: &tsk.IsDone,
-			UserId: &tsk.UserID,
 		}
 		response = append(response, task)
 	}
